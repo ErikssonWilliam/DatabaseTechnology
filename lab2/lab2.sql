@@ -130,7 +130,7 @@ SELECT name FROM jbemployee WHERE name LIKE '%son, %';
 1 row in set (0,01 sec)*/
 
 /* Question 7*/
-SELECT name FROM jbitem WHERE supplier IN(SELECT id FROM jbsupplier WHERE id = '89');
+SELECT name FROM jbitem WHERE supplier IN(SELECT id FROM jbsupplier WHERE name = 'Fisher-Price');
 /*+-----------------+
 | name            |
 +-----------------+
@@ -301,7 +301,7 @@ Instead a view shows a dynamic result based on the current state of underlying d
 /* Question 17*/
  CREATE VIEW debit_total_cost AS
  SELECT jbsale.debit AS debit_id,
-        SUM(jbitem.price * jbitem.qoh) AS total_cost
+        SUM(jbitem.price * jbsale.quantity) AS total_cost
  FROM jbsale, jbitem
  WHERE jbsale.item = jbitem.id
  GROUP BY jbsale.debit;
@@ -311,39 +311,39 @@ Instead a view shows a dynamic result based on the current state of underlying d
 /*+----------+------------+
 | debit_id | total_cost |
 +----------+------------+
-|   100581 |     850000 |
-|   100582 |      20000 |
-|   100586 |     573450 |
-|   100592 |     780000 |
-|   100593 |      21500 |
-|   100594 |     988500 |
+|   100581 |       2050 |
+|   100586 |      13446 |
+|   100592 |        650 |
+|   100593 |        430 |
+|   100594 |       3295 |
 +----------+------------+
-6 rows in set (0,00 sec)*/
+5 rows in set (0,00 sec)*/
+
 
 /* Question 18*/
 CREATE VIEW debit_total_cost AS
  SELECT jbsale.debit AS debit_id,
-        SUM(jbitem.price * jbitem.qoh) AS total_cost
+        SUM(jbitem.price * jbsale.quantity) AS total_cost
 FROM jbsale
 INNER JOIN jbitem ON jbsale.item = jbitem.id
 GROUP BY jbsale.debit;
 SELECT * FROM debit_total_cost;
 
 /* We use inner join since we only want the columns from jbitem that's also already in jbsale.
-Since we want to show by debit, which is in the jbsale table.
+Since we want to show by debit, which is in the jbsale table.*/
 
 SELECT * FROM debit_total_cost;
-+----------+------------+
+/*+----------+------------+
 | debit_id | total_cost |
 +----------+------------+
-|   100581 |     850000 |
-|   100582 |      20000 |
-|   100586 |     573450 |
-|   100592 |     780000 |
-|   100593 |      21500 |
-|   100594 |     988500 |
+|   100581 |       2050 |
+|   100586 |      13446 |
+|   100592 |        650 |
+|   100593 |        430 |
+|   100594 |       3295 |
 +----------+------------+
-6 rows in set (0,00 sec) */
+5 rows in set (0,00 sec)*/
+
 
 /* Question 19*/
 /* a) */
@@ -411,37 +411,43 @@ GROUP BY supplier;
 DROP VIEW jbsale_supply;
 /*Query OK, 0 rows affected (0,00 sec)*/
 
-CREATE VIEW jbsale_supply(supplier, item, quantity) AS
-SELECT jbsupplier.name, jbitem.name, COALESCE(jbsale.quantity, 0)
+
+CREATE VIEW jbsale_supply(SupplierName,ItemName,quantity) AS
+SELECT jbsupplier.name, jbitem.name,jbsale.quantity 
 FROM jbsupplier
-LEFT JOIN jbitem ON jbsupplier.id = jbitem.supplier
+RIGHT JOIN jbitem ON jbsupplier.id = jbitem.supplier
 LEFT JOIN jbsale ON jbsale.item = jbitem.id;
-/*Query OK, 0 rows affected (0,01 sec)*/
+
+    
+SELECT SupplierName,ItemName, COALESCE(quantity,0) AS SoldQuantity FROM jbsale_supply;
 
 
-SELECT supplier, sum(quantity) AS sum FROM jbsale_supply
-GROUP BY supplier;
 
-/*+--------------+------+
-| supplier     | sum  |
-+--------------+------+
-| A E Neumann  |    0 |
-| Amdahl       |    0 |
-| Cannon       |    6 |
-| Data General |    0 |
-| DEC          |    0 |
-| Edger        |    0 |
-| Fisher-Price |    0 |
-| IBM          |    0 |
-| Levi-Strauss |    1 |
-| Playskool    |    2 |
-| Spooley      |    0 |
-| White Paper  |    0 |
-| White Stag   |    4 |
-| Whitman's    |    2 |
-| Wormley      |    0 |
-+--------------+------+
-15 rows in set (0,00 sec)*/
+/*+--------------+-----------------+--------------+
+| SupplierName | ItemName        | SoldQuantity |
++--------------+-----------------+--------------+
+| Cannon       | Wash Cloth      |            0 |
+| Levi-Strauss | Bellbottoms     |            0 |
+| Playskool    | ABC Blocks      |            0 |
+| Whitman's    | 1 lb Box        |            2 |
+| Whitman's    | 2 lb Box, Mix   |            0 |
+| Fisher-Price | Maze            |            0 |
+| White Stag   | Jacket          |            1 |
+| White Stag   | Slacks          |            0 |
+| Playskool    | Clock Book      |            2 |
+| Fisher-Price | The 'Feel' Book |            0 |
+| Cannon       | Towels, Bath    |            5 |
+| Fisher-Price | Squeeze Ball    |            0 |
+| Cannon       | Twin Sheet      |            1 |
+| Cannon       | Queen Sheet     |            0 |
+| White Stag   | Ski Jumpsuit    |            3 |
+| Levi-Strauss | Jean            |            0 |
+| Levi-Strauss | Shirt           |            1 |
+| Levi-Strauss | Boy's Jean Suit |            0 |
++--------------+-----------------+--------------+
+18 rows in set (0.00 sec)
+*/
+
 
 
 
