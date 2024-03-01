@@ -175,7 +175,7 @@ SELECT name FROM jbcity WHERE id IN(SELECT city FROM jbsupplier);
 15 rows in set (0,01 sec)*/
 
 /* Question 10*/
-SELECT name, color FROM jbparts WHERE weight > (SELECT weight FROM jbparts WHERE id='11');
+SELECT name, color FROM jbparts WHERE weight > (SELECT weight FROM jbparts WHERE name = 'card reader');
 /*+--------------+--------+
 | name         | color  |
 +--------------+--------+
@@ -187,7 +187,7 @@ SELECT name, color FROM jbparts WHERE weight > (SELECT weight FROM jbparts WHERE
 4 rows in set (0,00 sec)*/
 
 /* Question 11*/
-SELECT p1.name, p1.color FROM jbparts p1 JOIN jbparts p2 ON p1.weight > p2.weight and p2.id ='11';
+SELECT p1.name, p1.color FROM jbparts p1 JOIN jbparts p2 ON p1.weight > p2.weight and p2.name ='card reader';
 /*+--------------+--------+
 | name         | color  |
 +--------------+--------+
@@ -416,37 +416,24 @@ CREATE VIEW jbsale_supply(SupplierName,ItemName,quantity) AS
 SELECT jbsupplier.name, jbitem.name,jbsale.quantity 
 FROM jbsupplier
 RIGHT JOIN jbitem ON jbsupplier.id = jbitem.supplier
-LEFT JOIN jbsale ON jbsale.item = jbitem.id;
+LEFT JOIN jbsale ON jbsale.item = jbitem.id
+GROUP BY jbsupplier.name;
 
     
-SELECT SupplierName,ItemName, COALESCE(quantity,0) AS SoldQuantity FROM jbsale_supply;
+SELECT SupplierName, COALESCE(quantity,0) AS SoldQuantity FROM jbsale_supply;
 
+/*+--------------+--------------+
+| SupplierName | SoldQuantity |
++--------------+--------------+
+| Cannon       |            0 |
+| Fisher-Price |            0 |
+| Levi-Strauss |            0 |
+| Playskool    |            0 |
+| White Stag   |            1 |
+| Whitman's    |            2 |
++--------------+--------------+
+6 rows in set (0.00 sec)*/
 
-
-/*+--------------+-----------------+--------------+
-| SupplierName | ItemName        | SoldQuantity |
-+--------------+-----------------+--------------+
-| Cannon       | Wash Cloth      |            0 |
-| Levi-Strauss | Bellbottoms     |            0 |
-| Playskool    | ABC Blocks      |            0 |
-| Whitman's    | 1 lb Box        |            2 |
-| Whitman's    | 2 lb Box, Mix   |            0 |
-| Fisher-Price | Maze            |            0 |
-| White Stag   | Jacket          |            1 |
-| White Stag   | Slacks          |            0 |
-| Playskool    | Clock Book      |            2 |
-| Fisher-Price | The 'Feel' Book |            0 |
-| Cannon       | Towels, Bath    |            5 |
-| Fisher-Price | Squeeze Ball    |            0 |
-| Cannon       | Twin Sheet      |            1 |
-| Cannon       | Queen Sheet     |            0 |
-| White Stag   | Ski Jumpsuit    |            3 |
-| Levi-Strauss | Jean            |            0 |
-| Levi-Strauss | Shirt           |            1 |
-| Levi-Strauss | Boy's Jean Suit |            0 |
-+--------------+-----------------+--------------+
-18 rows in set (0.00 sec)
-*/
 
 
 
