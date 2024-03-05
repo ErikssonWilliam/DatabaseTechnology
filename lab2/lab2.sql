@@ -141,7 +141,7 @@ SELECT name FROM jbitem WHERE supplier IN(SELECT id FROM jbsupplier WHERE name =
 3 rows in set (0,00 sec)*/
 
 /* Question 8*/
-SELECT name FROM jbitem WHERE supplier = '89';
+SELECT name FROM jbitem WHERE name = 'Fisher-Price';
 /*+-----------------+
 | name            |
 +-----------------+
@@ -413,26 +413,27 @@ DROP VIEW jbsale_supply;
 
 
 CREATE VIEW jbsale_supply(SupplierName,ItemName,quantity) AS
-SELECT jbsupplier.name, jbitem.name,jbsale.quantity 
+SELECT jbsupplier.name, jbitem.name, jbsale.quantity
 FROM jbsupplier
-RIGHT JOIN jbitem ON jbsupplier.id = jbitem.supplier
-LEFT JOIN jbsale ON jbsale.item = jbitem.id
-GROUP BY jbsupplier.name;
+INNER JOIN jbitem ON jbsupplier.id = jbitem.supplier
+LEFT JOIN jbsale ON jbsale.item = jbitem.id;
 
-    
-SELECT SupplierName, COALESCE(quantity,0) AS SoldQuantity FROM jbsale_supply;
 
-/*+--------------+--------------+
-| SupplierName | SoldQuantity |
-+--------------+--------------+
-| Cannon       |            0 |
-| Fisher-Price |            0 |
-| Levi-Strauss |            0 |
-| Playskool    |            0 |
-| White Stag   |            1 |
-| Whitman's    |            2 |
-+--------------+--------------+
-6 rows in set (0.00 sec)*/
+SELECT SupplierName, sum(quantity) FROM jbsale_supply
+GROUP BY SupplierName;
+
+/*+--------------+---------------+
+| SupplierName | sum(quantity) |
++--------------+---------------+
+| Cannon       |             6 |
+| Fisher-Price |          NULL |
+| Levi-Strauss |             1 |
+| Playskool    |             2 |
+| White Stag   |             4 |
+| Whitman's    |             2 |
++--------------+---------------+
+6 rows in set (0.01 sec)*/
+
 
 
 
