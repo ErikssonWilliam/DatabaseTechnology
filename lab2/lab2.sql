@@ -141,7 +141,8 @@ SELECT name FROM jbitem WHERE supplier IN(SELECT id FROM jbsupplier WHERE name =
 3 rows in set (0,00 sec)*/
 
 /* Question 8*/
-SELECT name FROM jbitem WHERE name = 'Fisher-Price';
+SELECT jbitem.name FROM jbitem JOIN jbsupplier ON jbitem.supplier = jbsupplier.id
+WHERE name = 'Fisher-Price';
 /*+-----------------+
 | name            |
 +-----------------+
