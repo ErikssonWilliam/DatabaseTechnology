@@ -142,7 +142,7 @@ SELECT name FROM jbitem WHERE supplier IN(SELECT id FROM jbsupplier WHERE name =
 
 /* Question 8*/
 SELECT jbitem.name FROM jbitem JOIN jbsupplier ON jbitem.supplier = jbsupplier.id
-WHERE name = 'Fisher-Price';
+WHERE jbsupplier.name = 'Fisher-Price';
 /*+-----------------+
 | name            |
 +-----------------+
