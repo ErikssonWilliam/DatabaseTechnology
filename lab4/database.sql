@@ -20,7 +20,6 @@ CREATE TABLE Reservation
     
 CREATE TABLE Booking
    (ReservationNumb INTEGER,
-    PassengerPassportNumb INTEGER,
     TotalPrice INTEGER,
     CCNumber BIGINT,
     ContactPassengerNumb INTEGER,
@@ -79,9 +78,9 @@ CREATE TABLE Airport
     CONSTRAINT pk_airport PRIMARY KEY(Code)) ENGINE=InnoDB;
     
 CREATE TABLE Flight
-   (FlightNumber INTEGER,
+   (FlightNumber INTEGER NOT NULL AUTO_INCREMENT,
     Week INTEGER,
-    BookedPassenegers INTEGER,
+    BookedPassenegers INTEGER NOT NULL DEFAULT 0,
     WsID INTEGER,
    
     CONSTRAINT pk_flight PRIMARY KEY(FlightNumber)) ENGINE=InnoDB;
@@ -101,7 +100,6 @@ CREATE TABLE DayOfWeek
 
 ALTER TABLE Reservation ADD CONSTRAINT fk_reservationflight FOREIGN KEY(FlightNumb) REFERENCES Flight(FlightNumber);
 ALTER TABLE Booking ADD CONSTRAINT fk_bookingreservation FOREIGN KEY(ReservationNumb) REFERENCES Reservation(ReservationNumber);
-ALTER TABLE Booking ADD CONSTRAINT fk_bookingpassportnumber FOREIGN KEY(PassengerPassportNumb) REFERENCES Passenger(PassportNumber);
 ALTER TABLE Booking ADD CONSTRAINT fk_bookingcreditcard FOREIGN KEY(CCNumber) REFERENCES CreditCard(CardNumber);
 ALTER TABLE Booking ADD CONSTRAINT fk_bookingcontact FOREIGN KEY(ContactPassengerNumb) REFERENCES Contact(PassportNumb);
 ALTER TABLE HasTicket ADD CONSTRAINT fk_ticketreservation FOREIGN KEY(ReservNumb) REFERENCES Reservation(ReservationNumber);
@@ -114,7 +112,9 @@ ALTER TABLE DayOfWeek ADD CONSTRAINT fk_dayyear FOREIGN KEY(DOWYear) REFERENCES 
 ALTER TABLE WeeklySchedule ADD CONSTRAINT fk_weeklyroute FOREIGN KEY(RouteId) REFERENCES Route(RouteID);
 ALTER TABLE WeeklySchedule ADD CONSTRAINT fk_weekly FOREIGN KEY(WsYear, WsDay) REFERENCES DayOfWeek(DOWYear, Day);
 
-/*Question 3 */
+/*Question 3 
+Test script tested and should be ok
+*/ 
 
 DROP PROCEDURE IF EXISTS addYear;
 DROP PROCEDURE IF EXISTS addDay;
@@ -145,15 +145,82 @@ END;
 
 CREATE Procedure addFlight(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN d VARCHAR(10), IN t TIME)
 BEGIN
-	INSERT INTO WeeklySchedule (DepartureTime, RouteId, WsDay, WsYear)  VALUES (t, (SELECT 	 RouteID FROM Route WHERE DepartureID = dc AND ArrivesID = ac AND RouteYear = y), d, y);
+    DECLARE schedule_id INT;
+    DECLARE w INT;
+
+	INSERT INTO WeeklySchedule (DepartureTime, RouteId, WsDay, WsYear) VALUES (t, (SELECT RouteID FROM Route WHERE DepartureID = dc AND ArrivesID = ac AND RouteYear = y), d, y);
 	
-	DECLARE schedule_id INT = LAST_INSERT_ID();
-	DECLARE w INT = 1;
+	SET schedule_id = LAST_INSERT_ID();
+	SET w = 1;
 	WHILE w <= 52 DO
 		INSERT INTO Flight(Week, WsID) VALUES (w, schedule_id);
 		SET w = w + 1;
 	END WHILE;
 END;
-
 //
 delimiter ;
+
+/*Question 4 */
+DROP FUNCTION IF EXISTS calculateFreeSeats;
+DROP FUNCTION IF EXISTS calculatePrice;
+
+delimiter //
+
+CREATE Function calculateFreeSeats(fn INTEGER) RETURNS INTEGER
+BEGIN
+    DECLARE booked INTEGER;
+    SELECT BookedPassenegers INTO booked FROM Flight WHERE FlightNumber = fn;
+    RETURN 40 - booked;
+END;
+
+CREATE Function calculatePrice(fn INTEGER) RETURNS DOUBLE
+/* total price = routeprice * weekdayfactor (#bookedPassengers +1)/40 * profitfactor */
+BEGIN
+    DECLARE booked INTEGER;
+    DECLARE profit_factor DOUBLE;
+    DECLARE route_price DOUBLE;
+    DECLARE weekday_factor DOUBLE;
+
+    SELECT BookedPassenegers INTO booked FROM Flight WHERE FlightNumber = fn;
+    
+    SELECT ProfitFactor INTO profit_factor FROM Year
+    WHERE Year = (SELECT WsYear FROM WeeklySchedule WHERE ScheduleID = (SELECT WsID FROM Flight WHERE FlightNumber = fn));
+
+    SELECT Route.RoutePrice
+    INTO route_price
+    FROM Flight
+    JOIN WeeklySchedule ON Flight.WsID = WeeklySchedule.ScheduleID
+    JOIN Route ON WeeklySchedule.RouteId = Route.RouteID
+    WHERE Flight.FlightNumber = fn;
+
+    SELECT DayOfWeek.WeekdayFactor
+    INTO weekday_factor
+    FROM Flight
+    JOIN WeeklySchedule ON Flight.WsID = WeeklySchedule.ScheduleID
+    JOIN DayOfWeek ON WeeklySchedule.WsDay = DayOfWeek.Day AND WeeklySchedule.WsYear = DayOfWeek.DOWYear
+    WHERE Flight.FlightNumber = fn;
+
+    RETURN (route_price * weekday_factor * (booked + 1) / 40 )* profit_factor;
+END;
+//
+delimiter ;
+
+/*Question 5 */
+DROP TRIGGER IF EXISTS createTicketNumber;
+delimiter //
+
+CREATE TRIGGER createTicketNumber AFTER INSERT ON Booking FOR EACH ROW
+BEGIN
+    DECLARE new_ticket_number INTEGER;
+    SET new_ticket_number = FLOOR(RAND() * 100);
+
+    /*hämta alla tickets i en resevation, ge de sedan olika ticket numbers*/ 
+    SELECT * FROM HasTicket WHERE NEW.ReservationNumb = HasTicket.ReservNumb;
+    
+    /*ALTER table istället ? för reservation har redan tickets men utan ticket number?*/
+    INSERT INTO HasTicket (ReservNumb, PassportNumb, TicketNumber) VALUES (NEW.ReservationNumb, new_ticket_number);
+END;
+//
+delimiter ;
+
+
