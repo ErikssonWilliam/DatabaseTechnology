@@ -185,7 +185,8 @@ BEGIN
     
     SELECT ProfitFactor INTO profit_factor FROM Year
     WHERE Year = (SELECT WsYear FROM WeeklySchedule WHERE ScheduleID = (SELECT WsID FROM Flight WHERE FlightNumber = fn));
-
+ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
+BEGIN
     SELECT Route.RoutePrice
     INTO route_price
     FROM Flight
@@ -212,15 +213,48 @@ delimiter //
 CREATE TRIGGER createTicketNumber AFTER INSERT ON Booking FOR EACH ROW
 BEGIN
     DECLARE new_ticket_number INTEGER;
-    SET new_ticket_number = FLOOR(RAND() * 100);
+    DECLARE i INTEGER;
+    DECLARE passengers INTEGER;
 
-    /*hämta alla tickets i en resevation, ge de sedan olika ticket numbers*/ 
-    SELECT * FROM HasTicket WHERE NEW.ReservationNumb = HasTicket.ReservNumb;
-    
-    /*ALTER table istället ? för reservation har redan tickets men utan ticket number?*/
-    INSERT INTO HasTicket (ReservNumb, PassportNumb, TicketNumber) VALUES (NEW.ReservationNumb, new_ticket_number);
+    SELECT COUNT(*) INTO passengers FROM HasTicket WHERE HasTicket.ReservNumb = NEW.ReservationNumb;
+    SET i =1;ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
+BEGIN
+    WHILE i <= passengers DO 
+        SET new_ticket_number = FLOOR(RAND() * 100000);
+        UPDATE HasTicket SET TicketNumber = new_ticket_number WHERE HasTicket.ReservNumb = NEW.ReservationNumb AND TicketNumber IS NULL LIMIT 1;
+        SET i = i + 1;
+    END WHILE;
 END;
 //
 delimiter ;
 
+/*Question 6 */
+DROP PROCEDURE IF EXISTS addReservation;
+DROP PROCEDURE IF EXISTS addPassenger;
+delimiter //ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
+BEGIN
 
+CREATE Procedure addReservation(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN w INTEGER, IN d VARCHAR(10), IN t TIME, IN np INTEGER, OUT output_reservation_nr)
+BEGIN
+    DECLARE flightNumb INTEGER;
+    SELECT FlightNumber INTO flightNumb FROM Flight WHERE Flight.week = w AND Flight.WsID = (
+        SELECT ScheduleID FROM WeeklySchedule WHERE WsDay = d AND WsYear = y AND DepartureTime = t AND RouteId = (
+            SELECT RouteID FROM Route WHERE ArrivesID = ac AND DepartureID = dc AND RouteYear = y)
+    );
+
+	IF calculateFreeSeats(flightNumb) != 0 THEN /*kan vara  <= np*/
+        SET output_reservation_nr = FLOOR(RAND() * 100000);
+        INSERT INTO Reservation(ReservationNumber, FlightNumb) VALUES (output_reservation_nr, flightNumb);
+        /*INSERT INTO hasTicket?????*/
+    ELSE
+        SET output_reservation_nr = 0;
+    END IF;
+END;
+
+CREATE Procedure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
+BEGIN
+    /*Insert into passenger and HasTicket*/ 
+
+END;
+//
+delimiter ;
