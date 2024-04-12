@@ -105,7 +105,8 @@ ALTER TABLE Booking ADD CONSTRAINT fk_bookingcontact FOREIGN KEY(ContactPassenge
 ALTER TABLE HasTicket ADD CONSTRAINT fk_ticketreservation FOREIGN KEY(ReservNumb) REFERENCES Reservation(ReservationNumber);
 ALTER TABLE HasTicket ADD CONSTRAINT fk_ticketpassenger FOREIGN KEY(PassportNumb) REFERENCES Passenger(PassportNumber);
 ALTER TABLE Contact ADD CONSTRAINT fk_contactpassport FOREIGN KEY(PassportNumb) REFERENCES Passenger(PassportNumber);
-ALTER TABLE Route ADD CONSTRAINT fk_routeyear FOREIGN KEY(RouteYear) REFERENCES Year(Year);
+ALTER TABLE Route ADD CONSTRAINT fk_routeyear FOREIGN K
+EY(RouteYear) REFERENCES Year(Year);
 ALTER TABLE Route ADD CONSTRAINT fk_routedep FOREIGN KEY(DepartureID) REFERENCES Airport(Code);
 ALTER TABLE Flight ADD CONSTRAINT fk_flightweek FOREIGN KEY(WsID) REFERENCES WeeklySchedule(ScheduleID);
 ALTER TABLE DayOfWeek ADD CONSTRAINT fk_dayyear FOREIGN KEY(DOWYear) REFERENCES Year(Year);
@@ -185,8 +186,7 @@ BEGIN
     
     SELECT ProfitFactor INTO profit_factor FROM Year
     WHERE Year = (SELECT WsYear FROM WeeklySchedule WHERE ScheduleID = (SELECT WsID FROM Flight WHERE FlightNumber = fn));
-ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
-BEGIN
+
     SELECT Route.RoutePrice
     INTO route_price
     FROM Flight
@@ -217,8 +217,7 @@ BEGIN
     DECLARE passengers INTEGER;
 
     SELECT COUNT(*) INTO passengers FROM HasTicket WHERE HasTicket.ReservNumb = NEW.ReservationNumb;
-    SET i =1;ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
-BEGIN
+    SET i =1;
     WHILE i <= passengers DO 
         SET new_ticket_number = FLOOR(RAND() * 100000);
         UPDATE HasTicket SET TicketNumber = new_ticket_number WHERE HasTicket.ReservNumb = NEW.ReservationNumb AND TicketNumber IS NULL LIMIT 1;
@@ -231,28 +230,87 @@ delimiter ;
 /*Question 6 */
 DROP PROCEDURE IF EXISTS addReservation;
 DROP PROCEDURE IF EXISTS addPassenger;
+DROP PROCEDURE IF EXISTS addContact;
+DROP PROCEDURE IF EXISTS addPayment;
 delimiter //
 
 CREATE Procedure addReservation(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN w INTEGER, IN d VARCHAR(10), IN t TIME, IN np INTEGER, OUT output_reservation_nr INTEGER)
 BEGIN
-    DECLARE flightNumb INTEGER;
-    SELECT FlightNumber INTO flightNumb FROM Flight WHERE Flight.week = w AND Flight.WsID = (
+    DECLARE flightNumb INTEGER DEFAULT 0;
+  /*  SELECT FlightNumber INTO flightNumb FROM Flight WHERE Flight.week = w AND Flight.WsID = (
         SELECT ScheduleID FROM WeeklySchedule WHERE WsDay = d AND WsYear = y AND DepartureTime = t AND RouteId = (
             SELECT RouteID FROM Route WHERE ArrivesID = ac AND DepartureID = dc AND RouteYear = y)
-    );
+    );*/
+    SELECT f.FlightNumber INTO flightNumb
+    FROM Flight f
+    INNER JOIN WeeklySchedule ws ON f.WsID = ws.ScheduleID
+    INNER JOIN Route r ON ws.RouteId = r.RouteID
+    WHERE f.Week = w
+    AND ws.WsDay = d
+    AND ws.WsYear = y
+    AND ws.DepartureTime = t
+    AND r.ArrivesID = ac
+    AND r.DepartureID = dc
+    AND r.RouteYear = y;
 
-	IF calculateFreeSeats(flightNumb) != 0 THEN /*kan vara  <= np*/
+    IF flightNumb > 0 AND calculateFreeSeats(flightNumb) <= np THEN /*kan vara  != 0*/
         SET output_reservation_nr = FLOOR(RAND() * 100000);
         INSERT INTO Reservation(ReservationNumber, FlightNumb) VALUES (output_reservation_nr, flightNumb);
     ELSE
         SET output_reservation_nr = 0;
+        SELECT 'Incorrect flight details addResrvation ' AS Message;
     END IF;
 END;
 
 CREATE Procedure addPassenger(IN reservationnumber INTEGER, IN passNumb INTEGER, IN passname VARCHAR(30))
 BEGIN
-    INSERT INTO Passenger(PassportNumber, FullName) VALUES (passNumb, pname);
+    INSERT INTO Passenger(PassportNumber, FullName) VALUES (passNumb, passname);
     UPDATE HasTicket SET PassportNumb = passNumb WHERE ReservNumb = reservationnumber;
+END;
+
+CREATE PROCEDURE addContact(
+    IN reservation_nr INTEGER,
+    IN passport_number INTEGER,
+    IN email VARCHAR(30),
+    IN phone BIGINT)
+BEGIN
+    DECLARE passenger_exists INTEGER;
+
+    SELECT COUNT(*) INTO passenger_exists FROM HasTicket 
+    WHERE ReservNumb = reservation_nr AND PassportNumb = passport_number;
+
+    IF passenger_exists > 0 THEN
+        INSERT INTO Contact(PassportNumb, Email, PhoneNumber)
+        VALUES (passport_number, email, phone);
+    END IF;
+END;
+
+CREATE PROCEDURE addPayment(
+    IN reservation_nr INTEGER,
+    IN cardholder_name VARCHAR(30),
+    IN credit_card_number BIGINT
+)
+BEGIN
+    DECLARE flight_number INTEGER;
+    DECLARE unpaid_seats INTEGER;
+    DECLARE contact_exists INTEGER;
+
+    SELECT FlightNumb INTO flight_number FROM Reservation WHERE ReservationNumber = reservation_nr; 
+    SET unpaid_seats = calculateFreeSeats(flight_number);
+
+    SELECT COUNT(*) INTO contact_exists FROM Contact WHERE PassportNumb IN
+            (SELECT PassportNumb FROM HasTicket WHERE ReservNumb = reservation_nr);
+            
+    IF unpaid_seats > 0 AND contact_exists > 0 THEN
+
+        UPDATE Booking
+        SET TotalPrice = calculatePrice(flight_number), CCNumber = credit_card_number
+        WHERE ReservationNumb = reservation_nr;
+
+    ELSE
+        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+    END IF;
+
 END;
 //
 delimiter ;
