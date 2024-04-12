@@ -231,10 +231,9 @@ delimiter ;
 /*Question 6 */
 DROP PROCEDURE IF EXISTS addReservation;
 DROP PROCEDURE IF EXISTS addPassenger;
-delimiter //ure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
-BEGIN
+delimiter //
 
-CREATE Procedure addReservation(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN w INTEGER, IN d VARCHAR(10), IN t TIME, IN np INTEGER, OUT output_reservation_nr)
+CREATE Procedure addReservation(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN w INTEGER, IN d VARCHAR(10), IN t TIME, IN np INTEGER, OUT output_reservation_nr INTEGER)
 BEGIN
     DECLARE flightNumb INTEGER;
     SELECT FlightNumber INTO flightNumb FROM Flight WHERE Flight.week = w AND Flight.WsID = (
@@ -245,16 +244,15 @@ BEGIN
 	IF calculateFreeSeats(flightNumb) != 0 THEN /*kan vara  <= np*/
         SET output_reservation_nr = FLOOR(RAND() * 100000);
         INSERT INTO Reservation(ReservationNumber, FlightNumb) VALUES (output_reservation_nr, flightNumb);
-        /*INSERT INTO hasTicket?????*/
     ELSE
         SET output_reservation_nr = 0;
     END IF;
 END;
 
-CREATE Procedure addPassenger(IN reservation_number INTEGER, IN passNumb INTEGER, IN name VARCHAR(30))
+CREATE Procedure addPassenger(IN reservationnumber INTEGER, IN passNumb INTEGER, IN passname VARCHAR(30))
 BEGIN
-    /*Insert into passenger and HasTicket*/ 
-
+    INSERT INTO Passenger(PassportNumber, FullName) VALUES (passNumb, pname);
+    UPDATE HasTicket SET PassportNumb = passNumb WHERE ReservNumb = reservationnumber;
 END;
 //
 delimiter ;
