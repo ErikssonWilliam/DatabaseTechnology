@@ -201,7 +201,7 @@ BEGIN
     JOIN DayOfWeek ON WeeklySchedule.WsDay = DayOfWeek.Day AND WeeklySchedule.WsYear = DayOfWeek.DOWYear
     WHERE Flight.FlightNumber = fn;
 
-    RETURN (route_price * weekday_factor * (booked + 1) / 40 )* profit_factor;
+    RETURN ROUND((route_price * weekday_factor * (booked + 1) / 40 )* profit_factor,3);
 END;
 //
 delimiter ;
@@ -343,6 +343,7 @@ BEGIN
             INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
         END IF;
         INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
     ELSE
         SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
     END IF;
@@ -368,3 +369,59 @@ JOIN WeeklySchedule ws ON f.WsID = ws.ScheduleID
 JOIN Route r ON ws.RouteId = r.RouteID
 JOIN Airport dep ON r.DepartureID = dep.Code
 JOIN Airport dest ON r.ArrivesID = dest.Code;
+
+/*Question 8 */
+
+/*A) 
+You can limit table access
+You can encrypt data, the data is encoded using some coding algorithm. unaouthorized users will have a hard time deciphering the data,
+authorized users will be goiven a decoding key, s1124 kursboken*/
+
+/*B)
+s.336 kursboken
+advantages
+1. The same database and stored procedures can be used by several applications, reduces duplication and impoves software modularity
+2. reduce data transfer and communication cost between client and server
+3. enhance modeling powers of views by allowing more complex types of derived data to be made avaliable. Can be used tp
+check complex constraints 
+*/
+
+/*Question 9 */
+
+/*A)run q7 test code
+START TRANSACTION;
+then add reservation by  
+CALL addReservation("MIT","HOB",2010,2,"Monday","09:00:00",1,@a);
+Query OK, 3 rows affected (0,00 sec)
+
+B) NO, they have different output
+mysql> SELECT * FROM Reservation;
++-------------------+------------+
+| ReservationNumber | FlightNumb |
++-------------------+------------+
+|             16673 |          1 |
+|             59790 |          1 |
+|             77272 |          1 |
+|             42147 |          2 |
++-------------------+------------+
+4 rows in set (0,00 sec)
++-------------------+------------+
+| ReservationNumber | FlightNumb |
++-------------------+------------+
+|             16673 |          1 |
+|             59790 |          1 |
+|             77272 |          1 |
++-------------------+------------+
+
+The changes in terminal A is not visible until the changes are commited 
+
+C) 
+In Terminal b we did the below command, to modify the data from terminal a
+UPDATE Reservation SET ReservationNumber = 111 WHERE ReservationNumber = 31362;
+ERROR 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+
+This happens because sql automatically adds locks to the rows being modified within a transaction to ensure concurrency
+*/
+
+/*Question 10*/
+
