@@ -1,5 +1,4 @@
-
-SET foreign_key_checks = 0;
+ET foreign_key_checks = 0;
 DROP TABLE IF EXISTS Reservation CASCADE;
 DROP TABLE IF EXISTS Booking CASCADE;
 DROP TABLE IF EXISTS CreditCard CASCADE;
@@ -425,3 +424,457 @@ This happens because sql automatically adds locks to the rows being modified wit
 
 /*Question 10*/
 
+/*a) Session A: 
+Source Question10FillWithFlights.sql
+
++-----------------------+
+| Message               |
++-----------------------+
+| Testing answer for 10 |
++-----------------------+
+1 row in set (0,00 sec)
+
++---------------------------------------------------------------------------+
+| Message                                                                   |
++---------------------------------------------------------------------------+
+| Filling database with flights, should only be run in one of the terminals |
++---------------------------------------------------------------------------+
+1 row in set (0,00 sec)
+
+I forgot to copy all rows...
+
+Source Question10MakeBooking.sql
+
++---------------------------------------------------------------------------------+
+| Message                                                                         |
++---------------------------------------------------------------------------------+
+| Testing script for Question 10, Adds a booking, should be run in both terminals |
++---------------------------------------------------------------------------------+
+1 row in set (0,00 sec)
+
++--------------------------------------+
+| Message                              |
++--------------------------------------+
+| Adding a reservations and passengers |
++--------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
+Query OK, 5 rows affected (0,02 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,02 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,00 sec)
+
+Query OK, 5 rows affected (0,02 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,00 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 5 rows affected (0,01 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++----------+
+| SLEEP(5) |
++----------+
+|        0 |
++----------+
+1 row in set (5,00 sec)
+
++------------------------------------------------------------------------------+
+| Message                                                                      |
++------------------------------------------------------------------------------+
+| Making payment, supposed to work for one session and be denied for the other |
++------------------------------------------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 34 rows affected (0,02 sec)
+
++-----------------------------------------------------------------------------------------+------------------+
+| Message                                                                                 | nr_of_free_seats |
++-----------------------------------------------------------------------------------------+------------------+
+| Nr of free seats on the flight (should be 19 if no overbooking occured, otherwise -2):  |               19 |
++-----------------------------------------------------------------------------------------+------------------+
+1 row in set (0,00 sec)
+
+Session B
+
+Source Question10MakeBooking.sql
+
++---------------------------------------------------------------------------------+
+| Message                                                                         |
++---------------------------------------------------------------------------------+
+| Testing script for Question 10, Adds a booking, should be run in both terminals |
++---------------------------------------------------------------------------------+
+1 row in set (0,01 sec)
+
++--------------------------------------+
+| Message                              |
++--------------------------------------+
+| Adding a reservations and passengers |
++--------------------------------------+
+1 row in set (0,00 sec)
+
++----------------------------------------------------------+
+| Message                                                  |
++----------------------------------------------------------+
+| There exist no flight for the given route, date and time |
++----------------------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 2 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,01 sec)
+
+Query OK, 3 rows affected (0,01 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,01 sec)
+
+Query OK, 3 rows affected (0,01 sec)
+
++---------------------------------------------+
+| Message                                     |
++---------------------------------------------+
+| The given reservation number does not exist |
++---------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 2 rows affected (0,00 sec)
+
++----------+
+| SLEEP(5) |
++----------+
+|        0 |
++----------+
+1 row in set (5,00 sec)
+
++------------------------------------------------------------------------------+
+| Message                                                                      |
++------------------------------------------------------------------------------+
+| Making payment, supposed to work for one session and be denied for the other |
++------------------------------------------------------------------------------+
+1 row in set (0,00 sec)
+
++----------------------------------------------------------------------------------------+
+| Message                                                                                |
++----------------------------------------------------------------------------------------+
+| Reservation does not have a contact or there are not enough unpaid seats on the plane. |
++----------------------------------------------------------------------------------------+
+1 row in set (0,00 sec)
+
+Query OK, 3 rows affected (0,00 sec)
+
++-----------------------------------------------------------------------------------------+------------------+
+| Message                                                                                 | nr_of_free_seats |
++-----------------------------------------------------------------------------------------+------------------+
+| Nr of free seats on the flight (should be 19 if no overbooking occured, otherwise -2):  |               19 |
++-----------------------------------------------------------------------------------------+------------------+
+1 row in set (0,00 sec)
+
+Answer: No overbooking occured since the value of the last test in session B was 19 and not -2. This is because session A was ahead of session B which can be shown by the fact that the payment
+only when through in session A. Therefore Calculate freeSeats had time to recalculate which made the message show up that there's not enough free seats left in session B.
+
+b) It's technically possible for an overbooking to be made if both sessions read this if statement in addPayment
+ before the BookedPassengers is updated which makes the freeSeats for the other session not up to date.
+   IF unpaid_seats >= number_passengers AND contact_exists > 0 THEN
+        if card_exists = 0 THEN
+            INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+        END IF;
+        INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
+    ELSE
+        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+    END IF;
+
+    TILL STEPHANIE: Ska if satsen i addReservation göra så att vi får göra en reservation eller inte????? För testbänken i fråga 6 gör ju iallafall så att vi måste kolla om dte finns tillräckligt med platser.
+
+c)
+
+IF unpaid_seats >= number_passengers AND contact_exists > 0 THEN
+        if card_exists = 0 THEN
+            INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+        END IF;
+        SELECT SLEEP(5); -- add sleep 
+        INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
+
+    ELSE
+        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+    END IF;
+
+    Answer: Add sleep before updating the bookedpassangers and therefore before updating the free seats. Which makes the theoretical case possible to occur
+
+d) Question10FillWithFlights.sql:
+
+SELECT "Testing answer for 10" as "Message";
+SELECT "Filling database with flights, should only be run in one of the terminals" as "Message";
+/*Fill the database with data */
+CALL addYear(2010, 2.3);
+CALL addDay(2010,"Monday",1);
+CALL addDestination("MIT","Minas Tirith","Mordor");
+CALL addDestination("HOB","Hobbiton","The Shire");
+CALL addRoute("MIT","HOB",2010,2000);
+CALL addFlight("MIT","HOB", 2010, "Monday", "09:00:00");
+
+Question10MakeBooking.sql:
+
+SELECT "Testing script for Question 10, Adds a booking, should be run in both terminals" as "Message";
+SELECT "Adding a reservations and passengers" as "Message";
+CALL addReservation("MIT","HOB",2010,1,"Monday","09:00:00",21,@a); 
+CALL addPassenger(@a,00000001,"Saruman");
+CALL addPassenger(@a,00000002,"Orch1");
+CALL addPassenger(@a,00000003,"Orch2");
+CALL addPassenger(@a,00000004,"Orch3");
+CALL addPassenger(@a,00000005,"Orch4");
+CALL addPassenger(@a,00000006,"Orch5");
+CALL addPassenger(@a,00000007,"Orch6");
+CALL addPassenger(@a,00000008,"Orch7");
+CALL addPassenger(@a,00000009,"Orch8");
+CALL addPassenger(@a,00000010,"Orch9");
+CALL addPassenger(@a,00000011,"Orch10");
+CALL addPassenger(@a,00000012,"Orch11");
+CALL addPassenger(@a,00000013,"Orch12");
+CALL addPassenger(@a,00000014,"Orch13");
+CALL addPassenger(@a,00000015,"Orch14");
+CALL addPassenger(@a,00000016,"Orch15");
+CALL addPassenger(@a,00000017,"Orch16");
+CALL addPassenger(@a,00000018,"Orch17");
+CALL addPassenger(@a,00000019,"Orch18");
+CALL addPassenger(@a,00000020,"Orch19");
+CALL addPassenger(@a,00000021,"Orch20");
+CALL addContact(@a,00000001,"saruman@magic.mail",080667989); 
+SELECT SLEEP(5);
+
+--- New Code --- See Lecture 9
+
+START TRANSACTION;
+LOCK TABLES 
+Booking WRITE, 
+hasTicket, WRITE,
+CreditCard, WRITE,
+Flight READ,
+Reservation READ,
+Contact READ;
+
+SELECT "Making payment, supposed to work for one session and be denied for the other" as "Message";
+CALL addPayment (@a, "Sauron",7878787878);
+SELECT "Nr of free seats on the flight (should be 19 if no overbooking occured, otherwise -2): " as "Message", (SELECT nr_of_free_seats from allFlights where departure_week = 1) as "nr_of_free_seats";
+
+COMMIT;
+UNLOCK TABLES;
+
+
+Answer: A transaction should be added before addPayment since an overbooking is made possible during the sleep time before the Booking is updated. The code locks the tables related to updating the booking and creditcard in either to either read or write
+which allows the session that first started the payment to complete it and update calculateFreeseats before the next session can make the payment.
