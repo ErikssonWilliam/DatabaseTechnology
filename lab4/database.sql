@@ -877,4 +877,4 @@ UNLOCK TABLES;
 
 
 Answer: A transaction should be added before addPayment since an overbooking is made possible during the sleep time before the Booking is updated. The code locks the tables related to updating the booking and creditcard in either to either read or write
-which allows the session that first started the payment to complete it and update calculateFreeseats before the next session can make the payment.
+which allows the session that first started the payment to complete it and update calculateFreeseats before the next session can make the payment.*/
