@@ -239,10 +239,6 @@ delimiter //
 CREATE Procedure addReservation(IN dc VARCHAR(3),IN ac VARCHAR(3), IN y INTEGER, IN w INTEGER, IN d VARCHAR(10), IN t TIME, IN np INTEGER, OUT output_reservation_nr INTEGER)
 BEGIN
     DECLARE flightNumb INTEGER DEFAULT 0;
-  /*  SELECT FlightNumber INTO flightNumb FROM Flight WHERE Flight.week = w AND Flight.WsID = (
-        SELECT ScheduleID FROM WeeklySchedule WHERE WsDay = d AND WsYear = y AND DepartureTime = t AND RouteId = (
-            SELECT RouteID FROM Route WHERE ArrivesID = ac AND DepartureID = dc AND RouteYear = y)
-    );*/
     SELECT f.FlightNumber INTO flightNumb
     FROM Flight f
     INNER JOIN WeeklySchedule ws ON f.WsID = ws.ScheduleID
@@ -255,9 +251,13 @@ BEGIN
     AND r.DepartureID = dc
     AND r.RouteYear = y;
 
-    IF flightNumb > 0 AND calculateFreeSeats(flightNumb) >= np THEN
-        SET output_reservation_nr = FLOOR(RAND() * 100000);
-        INSERT INTO Reservation(ReservationNumber, FlightNumb) VALUES (output_reservation_nr, flightNumb);
+    IF flightNumb > 0 THEN
+        IF calculateFreeSeats(flightNumb) >= np THEN
+            SET output_reservation_nr = FLOOR(RAND() * 100000);
+            INSERT INTO Reservation(ReservationNumber, FlightNumb) VALUES (output_reservation_nr, flightNumb);
+        ELSE
+            SELECT 'There are not enough seats available on the chosen flight' AS Message;
+        END IF;
     ELSE
         SET output_reservation_nr = 0;
         SELECT 'There exist no flight for the given route, date and time' AS Message;
@@ -300,16 +300,20 @@ CREATE PROCEDURE addContact(
 BEGIN
     DECLARE passenger_exists INTEGER;
     DECLARE reservation_exists INT;
+    DECLARE contact_exists INT;
 
     SELECT COUNT(*) INTO passenger_exists FROM HasTicket 
     WHERE ReservNumb = reservation_nr AND PassportNumb = passport_number;
     SELECT COUNT(*) INTO reservation_exists FROM Reservation WHERE ReservationNumber = reservation_nr;
+    SELECT COUNT(*) INTO contact_exists FROM Contact WHERE PassportNumb = passport_number;
 
     IF reservation_exists > 0 THEN
         IF passenger_exists > 0 THEN
-            INSERT INTO Contact(PassportNumb, Email, PhoneNumber)
-            VALUES (passport_number, email, phone);
-            UPDATE Booking SET ContactPassengerNumb = passport_number WHERE ReservationNumb = reservation_nr;          
+            IF contact_exists = 0 THEN
+                INSERT INTO Contact(PassportNumb, Email, PhoneNumber)
+                VALUES (passport_number, email, phone);
+            END IF;
+            UPDATE Booking SET ContactPassengerNumb = passport_number WHERE ReservationNumb = reservation_nr;                    
         ELSE
             SELECT 'The person is not a passenger of the reservation' AS Message;
         END IF;
@@ -340,14 +344,25 @@ BEGIN
 
     SELECT COUNT(*) INTO number_passengers FROM HasTicket WHERE reservation_nr = ReservNumb;
 
-    IF unpaid_seats >= number_passengers AND contact_exists > 0 THEN
-        if card_exists = 0 THEN
-            INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+    IF flight_number > 0 THEN
+        IF unpaid_seats >= number_passengers THEN
+            IF contact_exists > 0 THEN
+                IF card_exists = 0 THEN
+                    INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+                END IF;
+                INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+                UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
+            ELSE
+                SELECT 'The reservation has no contact yet' AS Message;
+            END IF;
+ 
+        ELSE
+            SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS Message;
+            DELETE FROM HasTicket WHERE ReservNumb = reservation_nr;
+            DELETE FROM Reservation WHERE ReservationNumber = reservation_nr;
         END IF;
-        INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
-        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
     ELSE
-        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+        SELECT 'The given reservation number does not exist' AS Message;
     END IF;
 
 END;
@@ -431,30 +446,53 @@ This happens because sql automatically adds locks to the rows being modified wit
 No overbooking occured since the value of the last test in session B was 19 and not -2. This is because session A was ahead of session B which can be shown by the fact that the payment
 only went through in session A. Therefore Calculate freeSeats had time to recalculate which made the message show up that there's not enough free seats left in session B.*/
 
-/*b) It's technically possible for an overbooking to be made if both sessions read this if statement in addPayment
+/*b) It's technically possible for an overbooking to be made if both sessions read this if statement for unpaid_seats in addPayment
  before the BookedPassengers is updated which makes the freeSeats for the other session not up to date.
-   IF unpaid_seats >= number_passengers AND contact_exists > 0 THEN
-        if card_exists = 0 THEN
-            INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+
+    IF flight_number > 0 THEN
+        IF unpaid_seats >= number_passengers THEN
+            IF contact_exists > 0 THEN
+                IF card_exists = 0 THEN
+                    INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+                END IF;
+                INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+                UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
+            ELSE
+                SELECT 'The reservation has no contact yet' AS Message;
+            END IF;
+ 
+        ELSE
+            SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS Message;
+            DELETE FROM HasTicket WHERE ReservNumb = reservation_nr;
+            DELETE FROM Reservation WHERE ReservationNumber = reservation_nr;
         END IF;
-        INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
-        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
     ELSE
-        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+        SELECT 'The given reservation number does not exist' AS Message;
     END IF;
+ 
 
 c)
 
-IF unpaid_seats >= number_passengers AND contact_exists > 0 THEN
-        if card_exists = 0 THEN
-            INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+       IF flight_number > 0 THEN
+        IF unpaid_seats >= number_passengers THEN
+            IF contact_exists > 0 THEN
+                IF card_exists = 0 THEN
+                    INSERT INTO CreditCard(CardNumber, CardHolder) VALUES(credit_card_number, cardholder_name);
+                END IF;
+                SELECT SLEEP(5); -- add sleep 
+                INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
+                UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
+            ELSE
+                SELECT 'The reservation has no contact yet' AS Message;
+            END IF;
+ 
+        ELSE
+            SELECT 'There are not enough seats available on the flight anymore, deleting reservation' AS Message;
+            DELETE FROM HasTicket WHERE ReservNumb = reservation_nr;
+            DELETE FROM Reservation WHERE ReservationNumber = reservation_nr;
         END IF;
-        SELECT SLEEP(5); -- add sleep 
-        INSERT INTO Booking(ReservationNumb, TotalPrice, CCNumber) VALUES (reservation_nr, calculatePrice(flight_number), credit_card_number);
-        UPDATE Flight SET BookedPassenegers = BookedPassenegers + number_passengers WHERE FlightNumber = flight_number;
-
     ELSE
-        SELECT 'Reservation does not have a contact or there are not enough unpaid seats on the plane.' AS Message;
+        SELECT 'The given reservation number does not exist' AS Message;
     END IF;
 
     Answer: Add sleep before updating the bookedpassangers and therefore before updating the free seats. Which makes the theoretical case possible to occur
